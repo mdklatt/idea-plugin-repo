@@ -3,25 +3,34 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>JetBrains IDEA Plugins</title>
+  <title>JetBrains IDEA Plugin Repository</title>
+
+  <script>
+    function copyURL(path) {
+      const url = new URL(path, document.baseURI)
+      navigator.clipboard.writeText(url.href)
+    }
+  </script>
 </head>
 
 <body>
   <h1>JetBrains IDEA Plugins</h1>
 
-  <p>
-  <a href="https://www.jetbrains.com/help/idea/managing-plugins.html#repos">Custom repository</a>
-  for the JetBrains IDEA plugins at <a href="https://github.com/mdklatt">github.com/mdklatt</a>:
-  </p>
+  <a href="https://www.jetbrains.com/help/idea/managing-plugins.html#add_plugin_repos">Custom plugin repository</a>
+  for <a href="https://github.com/mdklatt">github.com/mdklatt:</a>
 
-  <ul>
-    <li><a href="https://github.com/mdklatt/idea-ansible-plugin">Ansible</a></li>
-    <li><a href="https://github.com/mdklatt/idea-netcdf-plugin">NetCDF</a></li>
-    <li><a href="https://github.com/mdklatt/idea-remotepython-plugin">Remote Python</a></li>
-  </ul>
+  <dl>
+    <dt><a href="https://github.com/mdklatt/idea-ansible-plugin">Ansible</a></dt>
+    <dd>Run configurations for executing <a href="https://docs.ansible.com/ansible/latest/index.html">Ansible</a> commands</dd>
 
-  <p>Add the repository to an IDE using the <a href="updatePlugins.xml">repo config file</a> URL.</p>
+    <dt><a href="https://github.com/mdklatt/idea-netcdf-plugin">NetCDF</a></dt>
+    <dd>Tools for working with <a href="https://www.unidata.ucar.edu/software/netcdf">NetCDF</a> files</dd>
 
+    <dt><a href="https://github.com/mdklatt/idea-remotepython-plugin">Remote Python</a></dt>
+    <dd>Run configurations for executing remote Python commands</dd>
+  </dl>
+
+  <button onclick="copyURL('updatePlugins.xml')">Copy repo URL</button>
 
 </body>
 
