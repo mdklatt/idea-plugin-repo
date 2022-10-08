@@ -32,7 +32,7 @@ available at this repository.
   </plugin>
   <plugin
       id="dev.mdklatt.idea.remotepython"
-      url="https://github.com/mdklatt/idea-ansible-plugin/releases/download/v1.0.0.rc0/idea-ansible-plugin-1.0.0.rc0.zip"
+      url="https://github.com/mdklatt/idea-remotepython-plugin/releases/download/v1.0.0.rc0/idea-remotepython-plugin-1.0.0-rc.1.zip"
       version="1.0.0.rc5">
     <idea-version since-build="221" />
   </plugin>
