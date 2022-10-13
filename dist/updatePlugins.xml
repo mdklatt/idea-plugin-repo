@@ -1,39 +1,12 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!--
-The <plugins> element (required) contains the description of the plugins
-available at this repository.
--->
+<?xml version='1.0' encoding='utf-8'?>
 <plugins>
-  <!--
-  Each <plugin> element (required) describes one plugin in the repository.
-  Attributes:
-   - "id" (required) - used by JetBrains IDEs to uniquely identify
-     a plugin. Must match <id> in the plugin.xml file.
-   - "url" (required) - URL to download the plugin JAR/ZIP file.
-     Must be HTTPS.
-   - "version" (required) - version of this plugin. Must match <version>
-     in the plugin.xml file.
-  -->
-  <plugin
-      id="software.mdklatt.idea.ansible"
-      url="https://github.com/mdklatt/idea-ansible-plugin/releases/download/v1.0.0.rc0/idea-ansible-plugin-1.0.0.rc0.zip"
-      version="1.0.0.rc0">
-    <!--
-    The <idea-version> element (required) must match the same element
-    in the plugin.xml file.
-    -->
+  <plugin id="software.mdklatt.idea.ansible" url="https://github.com/mdklatt/idea-ansible-plugin/releases/download/v1.0.0.rc0/idea-ansible-plugin-1.0.0.rc0.zip" version="1.0.0.rc0">
     <idea-version since-build="221" />
   </plugin>
-  <plugin
-      id="dev.mdklatt.idea.netcdf"
-      url="https://github.com/mdklatt/idea-netcdf-plugin/releases/download/v1.0.0/idea-netcdf-plugin-1.0.0.zip"
-      version="1.0.0">
+  <plugin id="dev.mdklatt.idea.netcdf" url="https://github.com/mdklatt/idea-netcdf-plugin/releases/download/v1.0.0/idea-netcdf-plugin-1.0.0.zip" version="1.0.0">
     <idea-version since-build="221" />
   </plugin>
-  <plugin
-      id="dev.mdklatt.idea.remotepython"
-      url="https://github.com/mdklatt/idea-remotepython-plugin/releases/download/v1.0.0.rc0/idea-remotepython-plugin-1.0.0-rc.1.zip"
-      version="1.0.0.rc5">
+  <plugin id="dev.mdklatt.idea.remotepython" url="https://github.com/mdklatt/idea-remotepython-plugin/releases/download/v1.0.0.rc0/idea-remotepython-plugin-1.0.0-rc.1.zip" version="1.0.0.rc5">
     <idea-version since-build="221" />
   </plugin>
 </plugins>
