@@ -11,7 +11,7 @@ from semver import VersionInfo
 from tempfile import NamedTemporaryFile
 from toml import load
 from typing import IO
-from xml.etree import ElementTree
+from xml.etree import ElementTree as etree
 from zipfile import ZipFile, Path as ZipPath
 
 
@@ -131,11 +131,16 @@ class _RepoConfig:
 
     """
     def __init__(self, path: str | Path):
-        """ Initialize an instance from an existing file.
+        """ Initialize an instance.
 
-        :param path: input path
+        If the config file does not exist it will be created.
+
+        :param path: config file path
         """
-        self._xml = ElementTree.parse(path)
+        try:
+            self._xml = etree.parse(path)
+        except FileNotFoundError:
+            self._xml = etree.ElementTree(etree.Element("plugins"))
         self._plugins = {elem.attrib["id"]: elem for elem in self._xml.getroot()}
         return
 
@@ -152,8 +157,8 @@ class _RepoConfig:
         except KeyError:
             # Add new <plugin> element.
             parent = self._xml.getroot()
-            elem = ElementTree.SubElement(parent, "plugin", {"id": id})
-            ElementTree.SubElement(elem, "idea-version")
+            elem = etree.SubElement(parent, "plugin", {"id": id})
+            etree.SubElement(elem, "idea-version")
             self._plugins[id] = elem
         elem.attrib |= {
             "version": meta.find("version").text,
@@ -171,7 +176,7 @@ class _RepoConfig:
         tmp_file = NamedTemporaryFile("wb", delete=False)
         tmp_path = Path(tmp_file.name)
         try:
-            ElementTree.indent(self._xml)
+            etree.indent(self._xml)
             self._xml.write(tmp_file, encoding="utf-8", xml_declaration=True)
             tmp_file.close()
             tmp_path.replace(path)
@@ -181,7 +186,7 @@ class _RepoConfig:
         return
 
     @classmethod
-    def _extract(cls, plugin: _JarFile) -> ElementTree:
+    def _extract(cls, plugin: _JarFile):
         """ Extract metadata from plugin JAR file
 
         :param plugin: distribution JAR
@@ -193,7 +198,7 @@ class _RepoConfig:
             # Find plugin library.
             if item.name.startswith(root_dir.name):
                 lib = _JarFile(item.open("rb"))
-                doc = ElementTree.parse(lib.item("META-INF/plugin.xml"))
+                doc = etree.parse(lib.item("META-INF/plugin.xml"))
                 return doc.getroot()
         else:
             raise ValueError("Could not find plugin.xml")
