@@ -130,6 +130,56 @@ class _RepoConfig:
     """ Plugin repository configuration.
 
     """
+    def __init__(self, path: str | Path):
+        """ Initialize an instance from an existing file.
+
+        :param path: input path
+        """
+        self._xml = ElementTree.parse(path)
+        self._plugins = {elem.attrib["id"]: elem for elem in self._xml.getroot()}
+        return
+
+    def update(self, url: str, plugin: _JarFile):
+        """ Add/replace <plugin> element in file.
+
+        :param url: plugin URL
+        :param plugin: plugin info
+        """
+        meta = self._extract(plugin)
+        id = meta.find("id").text
+        try:
+            elem = self._plugins[id]
+        except KeyError:
+            # Add new <plugin> element.
+            parent = self._xml.getroot()
+            elem = ElementTree.SubElement(parent, "plugin", {"id": id})
+            ElementTree.SubElement(elem, "idea-version")
+            self._plugins[id] = elem
+        elem.attrib |= {
+            "version": meta.find("version").text,
+            "url": url,
+        }
+        elem.find("idea-version").attrib |= meta.find("idea-version").attrib
+        return
+
+    def write(self, path: str | Path):
+        """ Write XML file.
+
+        :param path: output path
+        """
+        # Do not replace existing file unless new file is successfully written.
+        tmp_file = NamedTemporaryFile("wb", delete=False)
+        tmp_path = Path(tmp_file.name)
+        try:
+            ElementTree.indent(self._xml)
+            self._xml.write(tmp_file, encoding="utf-8", xml_declaration=True)
+            tmp_file.close()
+            tmp_path.replace(path)
+        except Exception:
+            tmp_path.unlink()
+            raise
+        return
+
     @classmethod
     def _extract(cls, plugin: _JarFile) -> ElementTree:
         """ Extract metadata from plugin JAR file
@@ -147,47 +197,6 @@ class _RepoConfig:
                 return doc.getroot()
         else:
             raise ValueError("Could not find plugin.xml")
-
-    def __init__(self, path: str | Path):
-        """ Initialize an instance from an existing file.
-
-        :param path: input path
-        """
-        self._xml = ElementTree.parse(path)
-        self._plugins = {elem.attrib["id"]: elem for elem in self._xml.getroot()}
-        return
-
-    def update(self, url: str, plugin: _JarFile):
-        """ Add/replace <plugin> element in file.
-
-        :param url: plugin URL
-        :param plugin: plugin info
-        """
-        meta = self._extract(plugin)
-        elem = self._plugins[meta.find("id").text]
-        elem.attrib |= {
-            "version": meta.find("version").text,
-            "url": url,
-        }
-        elem.find("idea-version").attrib |= meta.find("idea-version").attrib
-        return
-
-    def write(self, path: str | Path):
-        """ Write XML file.
-
-        :param path: output path
-        """
-        # Do not replace existing file unless new file is successfully written.
-        tmp_file = NamedTemporaryFile("wb", delete=False)
-        tmp_path = Path(tmp_file.name)
-        try:
-            self._xml.write(tmp_file, encoding="utf-8", xml_declaration=True)
-            tmp_file.close()
-            tmp_path.replace(path)
-        except Exception:
-            tmp_path.unlink()
-            raise
-        return
 
 
 # Execute the application.
