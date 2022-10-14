@@ -4,8 +4,9 @@
 from __future__ import annotations
 
 from aiohttp import ClientSession
-from asyncio import get_event_loop
+from asyncio import gather, run
 from io import BytesIO
+from operator import itemgetter
 from pathlib import Path, PosixPath
 from semver import VersionInfo
 from tempfile import NamedTemporaryFile
@@ -25,13 +26,11 @@ async def main() -> int:
     """
     config = load("etc/config.toml")
     repo_config = _RepoConfig(config["repo_config"])
-    for plugin in config["plugins"]:
-        # TODO: Use async loop.
-        release = await _GitHubRelease.get(config["user"], plugin["repo"])
-        dist_name = f"{plugin['artifact']}-{release.version}.zip"
-        dist_url = release.assets[dist_name]["browser_download_url"]
-        dist_jar = await _JarFile.download(dist_url)
-        repo_config.update(dist_url, dist_jar)
+    user = config["user"]
+    args = itemgetter("repo", "artifact")
+    tasks = [get_plugin(user, *args(item)) for item in config["plugins"]]
+    for url, jar in await gather(*tasks):
+        repo_config.update(url, jar)
     repo_config.write(config["repo_config"])
     return 0
 
@@ -204,8 +203,22 @@ class _RepoConfig:
             raise ValueError("Could not find plugin.xml")
 
 
+async def get_plugin(user, repo, artifact) -> (str, _JarFile):
+    """ Get plugin JAR from GitHub.
+
+    :param user: GitHub user
+    :param repo: plugin repo
+    :param artifact: plugin Maven artifact
+    :return plugin binary URL and JAR
+    """
+    release = await _GitHubRelease.get(user, repo)
+    dist_name = f"{artifact}-{release.version}.zip"
+    url = release.assets[dist_name]["browser_download_url"]
+    jar = await _JarFile.download(url)
+    return url, jar
+
+
 # Execute the application.
 
 if __name__ == "__main__":
-    loop = get_event_loop()
-    raise SystemExit(loop.run_until_complete(main()))
+    raise SystemExit(run(main()))
