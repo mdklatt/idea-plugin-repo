@@ -1,7 +1,12 @@
-# Ignore Python envrionments.
+# Ignore Python environments.
 
 .python-version
 .venv*/
+
+
+# Ignore Make artifacts.
+
+**/.make-update
 
 
 # Ignore settings for various IDEs.
