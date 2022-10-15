@@ -2,8 +2,13 @@ user = "mdklatt"
 repo_config = "dist/updatePlugins.xml"
 
 [[plugins]]
+repo = "idea-ansible-plugin"
+artifact = "idea-ansible-plugin"
+
+[[plugins]]
 repo = "idea-netcdf-plugin"
 artifact = "idea-netcdf-plugin"
+
 
 # TODO: Need release versions of these.
 
@@ -11,6 +16,3 @@ artifact = "idea-netcdf-plugin"
 #repo = "idea-remotepython-plugin"
 #artifact = "idea-remotepython-plugin"
 
-#[[plugins]]
-#repo = "idea-ansible-plugin"
-#artifact = "idea-ansible-plugin"

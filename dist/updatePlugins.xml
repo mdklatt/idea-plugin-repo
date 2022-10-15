@@ -3,4 +3,7 @@
   <plugin id="dev.mdklatt.idea.netcdf" version="1.0.0" url="https://github.com/mdklatt/idea-netcdf-plugin/releases/download/v1.0.0/idea-netcdf-plugin-1.0.0.zip">
     <idea-version since-build="221" />
   </plugin>
+  <plugin id="software.mdklatt.idea.ansible" version="1.0.0" url="https://github.com/mdklatt/idea-ansible-plugin/releases/download/v1.0.0/idea-ansible-plugin-1.0.0.zip">
+    <idea-version since-build="221" />
+  </plugin>
 </plugins>
