@@ -24,7 +24,7 @@ async def main() -> int:
 
     :return: exit status
     """
-    config = load("etc/config.toml")
+    config = load("config.toml")
     repo_config = _RepoConfig(config["repo_config"])
     user = config["user"]
     args = itemgetter("repo", "artifact")
