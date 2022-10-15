@@ -1,9 +1,12 @@
 <?xml version='1.0' encoding='utf-8'?>
 <plugins>
+  <plugin id="dev.mdklatt.idea.ansible" version="1.0.1" url="https://github.com/mdklatt/idea-ansible-plugin/releases/download/v1.0.1/idea-ansible-plugin-1.0.1.zip">
+    <idea-version since-build="221" />
+  </plugin>
   <plugin id="dev.mdklatt.idea.netcdf" version="1.0.0" url="https://github.com/mdklatt/idea-netcdf-plugin/releases/download/v1.0.0/idea-netcdf-plugin-1.0.0.zip">
     <idea-version since-build="221" />
   </plugin>
-  <plugin id="software.mdklatt.idea.ansible" version="1.0.0" url="https://github.com/mdklatt/idea-ansible-plugin/releases/download/v1.0.0/idea-ansible-plugin-1.0.0.zip">
+  <plugin id="dev.mdklatt.idea.remotepython" version="1.0.0" url="https://github.com/mdklatt/idea-remotepython-plugin/releases/download/v1.0.0/idea-remotepython-plugin-1.0.0.zip">
     <idea-version since-build="221" />
   </plugin>
 </plugins>
