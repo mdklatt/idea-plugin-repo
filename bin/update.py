@@ -9,9 +9,8 @@ from io import BytesIO
 from operator import itemgetter
 from pathlib import Path, PosixPath
 from semver import VersionInfo
-from tempfile import NamedTemporaryFile
 from toml import load
-from typing import IO
+from typing import IO, Sequence
 from xml.etree import ElementTree as etree
 from zipfile import ZipFile, Path as ZipPath
 
@@ -25,12 +24,11 @@ async def main() -> int:
     :return: exit status
     """
     config = load("config.toml")
-    repo_config = _RepoConfig(config["repo_config"])
     user = config["user"]
     args = itemgetter("repo", "artifact")
-    tasks = [get_plugin(user, *args(item)) for item in config["plugins"]]
-    for url, jar in await gather(*tasks):
-        repo_config.update(url, jar)
+    tasks = [_Plugin.get(user, *args(item)) for item in config["plugins"]]
+    plugins = await gather(*tasks)
+    repo_config = _RepoConfig(plugins)
     repo_config.write(config["repo_config"])
     return 0
 
@@ -49,7 +47,7 @@ class _GitHubRelease:
 
     @classmethod
     async def get(cls, user: str, repo: str, tag=None) -> _GitHubRelease:
-        """ Get a release from the GitHub API
+        """ Get a release from the GitHub API.
 
         :param user: GitHub username
         :param repo: project repo name
@@ -129,41 +127,13 @@ class _RepoConfig:
     """ Plugin repository configuration.
 
     """
-    def __init__(self, path: str | Path):
+    def __init__(self, plugins: Sequence[_Plugin]):
         """ Initialize an instance.
 
-        If the config file does not exist it will be created.
-
-        :param path: config file path
         """
-        try:
-            self._xml = etree.parse(path)
-        except FileNotFoundError:
-            self._xml = etree.ElementTree(etree.Element("plugins"))
-        self._plugins = {elem.attrib["id"]: elem for elem in self._xml.getroot()}
-        return
-
-    def update(self, url: str, plugin: _JarFile):
-        """ Add/replace <plugin> element in file.
-
-        :param url: plugin URL
-        :param plugin: plugin info
-        """
-        meta = self._extract(plugin)
-        id = meta.find("id").text
-        try:
-            elem = self._plugins[id]
-        except KeyError:
-            # Add new <plugin> element.
-            parent = self._xml.getroot()
-            elem = etree.SubElement(parent, "plugin", {"id": id})
-            etree.SubElement(elem, "idea-version")
-            self._plugins[id] = elem
-        elem.attrib |= {
-            "version": meta.find("version").text,
-            "url": url,
-        }
-        elem.find("idea-version").attrib |= meta.find("idea-version").attrib
+        self._xml = etree.ElementTree(etree.Element("plugins"))
+        for plugin in plugins:
+            self._add(plugin)
         return
 
     def write(self, path: str | Path):
@@ -171,51 +141,74 @@ class _RepoConfig:
 
         :param path: output path
         """
-        # Do not replace existing file unless new file is successfully written.
-        tmp_file = NamedTemporaryFile("wb", delete=False)
-        tmp_path = Path(tmp_file.name)
-        try:
-            etree.indent(self._xml)
-            self._xml.write(tmp_file, encoding="utf-8", xml_declaration=True)
-            tmp_file.close()
-            tmp_path.replace(path)
-        except Exception:
-            tmp_path.unlink()
-            raise
+        path = Path(path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        etree.indent(self._xml)
+        self._xml.write(path, encoding="utf-8", xml_declaration=True)
         return
 
-    @classmethod
-    def _extract(cls, plugin: _JarFile):
-        """ Extract metadata from plugin JAR file
+    def _add(self, plugin: _Plugin):
+        """ Add <plugin> element.
 
-        :param plugin: distribution JAR
+        :param plugin: plugin object
+        """
+        meta = plugin.meta()
+        id = meta.find("id").text
+        parent = self._xml.getroot()
+        elem = etree.SubElement(parent, "plugin", {"id": id})
+        elem.attrib |= {
+            "version": meta.find("version").text,
+            "url": plugin.url,
+        }
+        etree.SubElement(elem, "idea-version")
+        elem.find("idea-version").attrib |= meta.find("idea-version").attrib
+        return
+
+
+class _Plugin:
+    """ Plugin file.
+
+    """
+    @classmethod
+    async def get(cls, user: str, repo: str, artifact: str):
+        """ Get a plugin from GitHub.
+
+        :param user: GitHub user
+        :param repo: plugin repo name
+        :param artifact: plugin artifact name
+        """
+        release = await _GitHubRelease.get(user, repo)
+        name = f"{artifact}-{release.version}.zip"
+        url = release.assets[name]["browser_download_url"]
+        jar = await _JarFile.download(url)
+        return _Plugin(url, jar)
+
+    def __init__(self, url: str, jar: _JarFile):
+        """ Initialize this object.
+
+        :param url: plugin URL
+        :param jar: distribution JAR
+        """
+        self.url = url
+        self._jar = jar
+        return
+
+    def meta(self) -> etree.Element:
+        """ Extract plugin metadata.
+
         :return: XML
         """
-        root_dir = next(plugin.root.iterdir())  # single root directory
+        root_dir = next(self._jar.root.iterdir())  # single root directory
         assert root_dir.is_dir()
+        meta_file = "META-INF/plugin.xml"
         for item in root_dir.joinpath("lib").iterdir():
             # Find plugin library.
             if item.name.startswith(root_dir.name):
                 lib = _JarFile(item.open("rb"))
-                doc = etree.parse(lib.item("META-INF/plugin.xml"))
+                doc = etree.parse(lib.item(meta_file))
                 return doc.getroot()
         else:
-            raise ValueError("Could not find plugin.xml")
-
-
-async def get_plugin(user, repo, artifact) -> (str, _JarFile):
-    """ Get plugin JAR from GitHub.
-
-    :param user: GitHub user
-    :param repo: plugin repo
-    :param artifact: plugin Maven artifact
-    :return plugin binary URL and JAR
-    """
-    release = await _GitHubRelease.get(user, repo)
-    dist_name = f"{artifact}-{release.version}.zip"
-    url = release.assets[dist_name]["browser_download_url"]
-    jar = await _JarFile.download(url)
-    return url, jar
+            raise ValueError(f"Could not find {meta_file}")
 
 
 # Execute the application.
