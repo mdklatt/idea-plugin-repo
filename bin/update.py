@@ -6,11 +6,13 @@ from __future__ import annotations
 from aiohttp import ClientSession
 from asyncio import gather, run
 from io import BytesIO
+from jinja2 import Environment, FileSystemLoader
 from operator import itemgetter
 from pathlib import Path, PosixPath
 from semver import VersionInfo
 from toml import load
 from typing import IO, Sequence
+from urllib.parse import urlsplit, urlunsplit
 from xml.etree import ElementTree as etree
 from zipfile import ZipFile, Path as ZipPath
 
@@ -30,6 +32,8 @@ async def main() -> int:
     plugins = await gather(*tasks)
     repo_config = _RepoConfig(plugins)
     repo_config.write(config["repo_config"])
+    index_file = _IndexFile(user, plugins)
+    index_file.write("dist/index.html")
     return 0
 
 
@@ -123,6 +127,62 @@ class _JarFile:
         return self._archive.open(str(path), "r")
 
 
+class _Plugin:
+    """ Plugin file.
+
+    """
+    @classmethod
+    async def get(cls, user: str, repo: str, artifact: str):
+        """ Get a plugin from GitHub.
+
+        :param user: GitHub user
+        :param repo: parent repo name
+        :param artifact: plugin artifact name
+        """
+        release = await _GitHubRelease.get(user, repo)
+        name = f"{artifact}-{release.version}.zip"
+        url = release.assets[name]["browser_download_url"]
+        jar = await _JarFile.download(url)
+        return _Plugin(url, jar)
+
+    def __init__(self, url: str, jar: _JarFile):
+        """ Initialize this object.
+
+        :param repo: parent repo name
+        :param url: plugin URL
+        :param jar: distribution JAR
+        """
+        self._jar = jar
+        self.url = url
+        self.meta = self._meta(self._jar)
+        config = load("config.toml")
+        return
+
+    @classmethod
+    def _meta(cls, jar: _JarFile) -> dict:
+        """ Extract plugin metadata.
+
+        :return: XML
+        """
+        root_dir = next(jar.root.iterdir())  # single root directory
+        assert root_dir.is_dir()
+        meta_file = "META-INF/plugin.xml"
+        for item in root_dir.joinpath("lib").iterdir():
+            # Find plugin library.
+            if item.name.startswith(root_dir.name):
+                lib = _JarFile(item.open("rb"))
+                doc = etree.parse(lib.item(meta_file))
+                root = doc.getroot()
+                break
+        else:
+            raise ValueError(f"Could not find {meta_file}")
+        keys = "id", "name", "version", "description"
+        meta = {key: root.find(key).text for key in keys}
+        keys = "idea-version",
+        meta |= {key: root.find(key).attrib for key in keys}
+        return meta
+
+
 class _RepoConfig:
     """ Plugin repository configuration.
 
@@ -130,6 +190,7 @@ class _RepoConfig:
     def __init__(self, plugins: Sequence[_Plugin]):
         """ Initialize an instance.
 
+        :param plugins: plugins for this repo
         """
         self._xml = etree.ElementTree(etree.Element("plugins"))
         for plugin in plugins:
@@ -152,63 +213,56 @@ class _RepoConfig:
 
         :param plugin: plugin object
         """
-        meta = plugin.meta()
-        id = meta.find("id").text
-        parent = self._xml.getroot()
-        elem = etree.SubElement(parent, "plugin", {"id": id})
-        elem.attrib |= {
-            "version": meta.find("version").text,
-            "url": plugin.url,
-        }
-        etree.SubElement(elem, "idea-version")
-        elem.find("idea-version").attrib |= meta.find("idea-version").attrib
+        attrib = {key: plugin.meta[key] for key in ("id", "version")}
+        attrib["url"] = plugin.url
+        elem = etree.SubElement(self._xml.getroot(), "plugin", attrib)
+        attrib = {key: plugin.meta[key] for key in ("idea-version",)}
+        etree.SubElement(elem, "idea-version", attrib)
         return
 
 
-class _Plugin:
-    """ Plugin file.
+class _IndexFile:
+    """ Template for index.html.
 
     """
     @classmethod
-    async def get(cls, user: str, repo: str, artifact: str):
-        """ Get a plugin from GitHub.
+    def repo_url(cls, plugin_url: str) -> str:
+        """ Get parent project repo from a plugin repo.
 
-        :param user: GitHub user
-        :param repo: plugin repo name
-        :param artifact: plugin artifact name
+        :param plugin_url: plugin file URL
+        :return: user URL
         """
-        release = await _GitHubRelease.get(user, repo)
-        name = f"{artifact}-{release.version}.zip"
-        url = release.assets[name]["browser_download_url"]
-        jar = await _JarFile.download(url)
-        return _Plugin(url, jar)
+        url = urlsplit(plugin_url)
+        path = url.path.split("/")
+        url = url._replace(path="/".join(path[:path.index("releases")]))
+        return urlunsplit(url)
 
-    def __init__(self, url: str, jar: _JarFile):
-        """ Initialize this object.
+    def __init__(self, user: str, plugins: Sequence[_Plugin]):
+        """ Initialize an instance.
 
-        :param url: plugin URL
-        :param jar: distribution JAR
         """
-        self.url = url
-        self._jar = jar
+        env = Environment(loader=FileSystemLoader("."), autoescape=False)
+        self._template = env.get_template("src/index.html")
+        self._context = {
+            "user": user,
+            "plugins": []
+        }
+        for plugin in plugins:
+            params = plugin.meta.copy()
+            params["repo"] = self.repo_url(plugin.url)
+            self._context["plugins"].append(params)
         return
 
-    def meta(self) -> etree.Element:
-        """ Extract plugin metadata.
+    def write(self, path: str | Path):
+        """ Write rendered template to a file.
 
-        :return: XML
+        :param path: output path
         """
-        root_dir = next(self._jar.root.iterdir())  # single root directory
-        assert root_dir.is_dir()
-        meta_file = "META-INF/plugin.xml"
-        for item in root_dir.joinpath("lib").iterdir():
-            # Find plugin library.
-            if item.name.startswith(root_dir.name):
-                lib = _JarFile(item.open("rb"))
-                doc = etree.parse(lib.item(meta_file))
-                return doc.getroot()
-        else:
-            raise ValueError(f"Could not find {meta_file}")
+        path = Path(path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        stream = self._template.stream(**self._context)
+        stream.dump(str(path))
+        return
 
 
 # Execute the application.
