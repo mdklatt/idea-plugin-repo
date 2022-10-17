@@ -2,6 +2,8 @@
 idea-plugin-repo
 ################
 
+|pages|
+
 Custom JetBrains IDEA `plugin repository`_ for `github.com/mdklatt`_ hosted on
 `GitHub Pages`_.
 
@@ -18,3 +20,6 @@ by `GitHub Actions`_.
 .. _plugin repository: https://plugins.jetbrains.com/docs/intellij/custom-plugin-repository
 .. _github.com/mdklatt: https://github.com/mdklatt
 .. _GitHub Actions: https://github.com/mdklatt/idea-plugin-repo/blob/main/.github/workflows/pages.yml
+.. |pages| image:: https://github.com/mdklatt/idea-plugin-repo/actions/workflows/pages.yml/badge.svg
+    :alt: Pages Workflow
+    :target: `GitHub Actions`_
