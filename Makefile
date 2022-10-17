@@ -11,6 +11,6 @@ $(VENV)/.make-update: requirements.txt
 .PHONY: dev
 dev: $(VENV)/.make-update
 
-.PHONY: update
-update:
-	$(PYTHON) bin/update.py
+.PHONY: build
+build: dev
+	$(PYTHON) bin/build.py
