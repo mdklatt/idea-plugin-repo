@@ -216,8 +216,7 @@ class _RepoConfig:
         attrib = {key: plugin.meta[key] for key in ("id", "version")}
         attrib["url"] = plugin.url
         elem = etree.SubElement(self._xml.getroot(), "plugin", attrib)
-        attrib = {key: plugin.meta[key] for key in ("idea-version",)}
-        etree.SubElement(elem, "idea-version", attrib)
+        etree.SubElement(elem, "idea-version", plugin.meta["idea-version"])
         return
 
 
