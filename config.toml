@@ -1,5 +1,4 @@
 user = "mdklatt"
-repo_config = "dist/updatePlugins.xml"
 
 [[plugins]]
 repo = "idea-ansible-plugin"

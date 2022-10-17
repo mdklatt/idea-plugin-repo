@@ -31,7 +31,7 @@ async def main() -> int:
     tasks = [_Plugin.get(user, *args(item)) for item in config["plugins"]]
     plugins = await gather(*tasks)
     repo_config = _RepoConfig(plugins)
-    repo_config.write(config["repo_config"])
+    repo_config.write("dist/updatePlugins.xml")
     index_file = _IndexFile(user, plugins)
     index_file.write("dist/index.html")
     return 0
