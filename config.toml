@@ -1,11 +1,14 @@
 [content]
-src = "src/"
+src = "templates/"
 dist = "dist/"
 templates = ["index.html", "updatePlugins.xml"]
 
 [github]
 user = "mdklatt"
 api = "https://api.github.com"
+
+
+# Define which plugins are included in the repo.
 
 [[plugins]]
 repo = "idea-ansible-plugin"
