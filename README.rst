@@ -4,8 +4,27 @@ idea-plugin-repo
 
 |pages|
 
-Custom JetBrains IDEA `plugin repository`_ for `github.com/mdklatt`_ hosted on
-`GitHub Pages`_.
+Static `GitHub Pages`_ site for a custom JetBrains IDEA `plugin repository`_
+for the plugins at `github.com/mdklatt`_.
+
+
+***********
+Development
+***********
+
+Set up a development environment.
+
+.. code-block:: console
+
+    $ make dev
+
+
+Build site content. Generated content is put in ``dist/`` by default. The
+*config.toml* file controls content generation.
+
+.. code-block:: console
+
+    $ make build
 
 
 **********
