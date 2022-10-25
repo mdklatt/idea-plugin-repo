@@ -19,15 +19,17 @@ from toml import load
 __all__ = "main",
 
 
+config = load("config.toml")
+
+
 async def main() -> int:
     """ Application entry point.
 
     :return: exit status
     """
-    config = load("config.toml")
-    context = await PluginContext.define(config["user"], config["plugins"])
-    for name in "index.html", "updatePlugins.xml":
-        path = Path("dist", name)
+    context = await PluginContext.define(config["github"]["user"], config["plugins"])
+    for name in config["content"]["templates"]:
+        path = Path(config["content"]["dist"], name)
         StaticTemplate(name).render(path, context)
     return 0
 
@@ -36,7 +38,7 @@ class StaticTemplate:
     """ Static file template.
 
     """
-    _env = Environment(loader=FileSystemLoader("src"), autoescape=False)
+    _env = Environment(loader=FileSystemLoader(config["content"]["src"]), autoescape=False)
 
     def __init__(self, name: str):
         """ Initialize this instance.
@@ -141,7 +143,7 @@ class _GitHubRelease:
         :param tag: release tag; defaults to latest version
         :return: release object
         """
-        api = "https://api.github.com"
+        api = config["github"]["api"]
         url = "/".join((api, "repos", user, repo, "releases"))
         headers = {
             "Accept": "application/vnd.github+json"

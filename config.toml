@@ -1,4 +1,11 @@
+[content]
+src = "src/"
+dist = "dist/"
+templates = ["index.html", "updatePlugins.xml"]
+
+[github]
 user = "mdklatt"
+api = "https://api.github.com"
 
 [[plugins]]
 repo = "idea-ansible-plugin"
