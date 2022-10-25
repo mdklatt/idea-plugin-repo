@@ -1,0 +1,8 @@
+<?xml version='1.0' encoding='utf-8'?>
+<plugins>
+  {% for plugin in plugins -%}
+  <plugin id="{{ plugin.id }}" version="{{ plugin.version }}" url="{{ plugin.url }}">
+    <idea-version {% for key, value in plugin["idea-version"].items() %}{{ key }}="{{ value }}"{% endfor %} />
+  </plugin>
+  {%- endfor %}
+</plugins>

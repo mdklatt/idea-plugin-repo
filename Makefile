@@ -13,4 +13,4 @@ dev: $(VENV)/.make-update
 
 .PHONY: build
 build: dev
-	$(PYTHON) bin/build.py
+	$(PYTHON) build.py
