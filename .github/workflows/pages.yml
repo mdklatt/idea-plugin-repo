@@ -38,7 +38,7 @@ jobs:
       - name: Install Python dependencies
         run: python -m pip install -U pip -r requirements.txt
       - name: Build content
-        run: python bin/build.py .
+        run: python build.py
       - name: Set up Pages
         uses: actions/configure-pages@v2
       - name: Upload artifact
