@@ -4,22 +4,20 @@ idea-plugin-repo
 
 |pages|
 
-Static `GitHub Pages`_ site for a custom JetBrains IDEA `plugin repository`_
-for the plugins at `github.com/mdklatt`_.
+This is the `GitHub Pages`_ source for `mdklatt.github.io/idea-plugin-repo`_,
+a custom JetBrains IDEA `plugin repository`_ for:
+
+- `Ansible Plugin`_
+- `NetCDF Plugin`_
+- `Remote Python Plugin`_
+
 
 
 ***********
 Development
 ***********
 
-Set up a development environment.
-
-.. code-block:: console
-
-    $ make dev
-
-
-Build site content. Generated content is put in ``dist/`` by default. The
+Build content for local testing. Generated content is put in ``dist/``. The
 *config.toml* file controls content generation.
 
 .. code-block:: console
@@ -31,14 +29,27 @@ Build site content. Generated content is put in ``dist/`` by default. The
 Deployment
 **********
 
-Pushes to ``main`` are automatically deployed to https://mdklatt.github.io/idea-plugin-repo
-by `GitHub Actions`_.
+Site content is published by GitHub Actions using the `Pages workflow`_.
+
+Plugin updates
+**************
+
+Run the workflow manually when a plugin is updated, *e.g.* when a new version
+is released.
+
+Code updates
+************
+
+Code changes pushed to ``main`` will automatically trigger the workflow.
 
 
 .. _GitHub Pages: https://docs.github.com/en/pages
+.. _mdklatt.github.io/idea-plugin-repo: https://mdklatt.github.io/idea-plugin-repo
+.. _Ansible Plugin: https://github.com/mdklatt/idea-ansible-plugin
+.. _NetCDF Plugin: https://github.com/mdklatt/idea-netcdf-plugin
+.. _Remote Python Plugin: https://github.com/mdklatt/idea-remotepython-plugin
 .. _plugin repository: https://plugins.jetbrains.com/docs/intellij/custom-plugin-repository
-.. _github.com/mdklatt: https://github.com/mdklatt
-.. _GitHub Actions: https://github.com/mdklatt/idea-plugin-repo/blob/main/.github/workflows/pages.yml
+.. _Pages workflow: https://github.com/mdklatt/idea-plugin-repo/actions/workflows/pages.yml
 .. |pages| image:: https://github.com/mdklatt/idea-plugin-repo/actions/workflows/pages.yml/badge.svg
     :alt: Pages Workflow
-    :target: `GitHub Actions`_
+    :target: `Pages workflow`_

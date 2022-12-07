@@ -1,6 +1,6 @@
 [content]
 src = "templates/"
-dist = "dist/"
+dist = "dist/"  # used by the Pages workflow
 templates = ["index.html", "updatePlugins.xml"]
 
 [github]
