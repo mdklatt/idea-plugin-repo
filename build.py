@@ -106,7 +106,7 @@ class PluginContext(dict):
         meta_file = "META-INF/plugin.xml"
         for item in root_dir.joinpath("lib").iterdir():
             # Find plugin library.
-            if item.name.startswith(root_dir.name):
+            if root_dir.name in item.name:
                 url = f"zip:://{item.at}"
                 lib = _JarFile(url, item.open("rb"))
                 doc = etree.parse(lib.item(meta_file))
