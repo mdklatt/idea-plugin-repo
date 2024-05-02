@@ -12,7 +12,7 @@ from zipfile import ZipFile, Path as ZipPath
 
 from aiohttp import ClientSession
 from jinja2 import Environment, FileSystemLoader
-from semver import VersionInfo
+from semver import Version
 from toml import load
 
 
@@ -89,7 +89,7 @@ class PluginContext(dict):
         :return: plugin metadata
         """
         release = await _GitHubRelease.get(user, plugin["repo"])
-        name = f"{plugin['artifact']}-{release.version}.zip"
+        name = f"{plugin['artifact']}-{release.version.finalize_version()}.zip"
         url = release.assets[name]["browser_download_url"]
         jar = await _JarFile.download(url)
         return plugin | cls._metadata(jar)
@@ -127,12 +127,12 @@ class _GitHubRelease:
 
     """
     @classmethod
-    def _semver(cls, tag: str) -> VersionInfo:
+    def _semver(cls, tag: str) -> Version:
         """ Get SemVer of a release from its Git tag.
 
         :return: version
         """
-        return VersionInfo.parse(tag.lstrip("v"))
+        return Version.parse(tag.lstrip("v"))
 
     @classmethod
     async def get(cls, user: str, repo: str, tag=None) -> _GitHubRelease:
